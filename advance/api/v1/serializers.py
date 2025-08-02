@@ -1,10 +1,13 @@
 from rest_framework import serializers
 
 from advance.models import Advance, Salary
+from user.models import User
 
 
 class AdvanceSerializer(serializers.ModelSerializer):
     employee_name = serializers.CharField(source='employee.full_name', read_only=True)
+    employee = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=True)
+
 
     class Meta:
         model = Advance
