@@ -92,3 +92,51 @@ class SimplePaginator:
         )
 
         return keyboard.as_markup(resize_keyboard=True)
+
+
+def select_month_keyboard(worker: str):
+    keyboard = InlineKeyboardBuilder()
+    for i in range(1, 13):
+        keyboard.add(
+            InlineKeyboardButton(
+                text=f"{i} - oylik", callback_data=f"month:{worker}:{i}"
+            )
+        )
+    keyboard.add(
+        InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel:True")
+    )
+    keyboard.adjust(4)
+    return keyboard.as_markup(resize_keyboard=True)
+
+
+def data_categries():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(
+        InlineKeyboardButton(
+            text="📊 Hisoblangan maoshlar", callback_data="category:saleries"
+        ),
+        InlineKeyboardButton(
+            text="📋 Olingan avanslar", callback_data="category:advances"
+        ),
+        InlineKeyboardButton(
+            text="📥 Mahaliy chiqarilgan yuklar",
+            callback_data="category:local_delivare",
+        ),
+        InlineKeyboardButton(
+            text="💰 Mahaliy Hamkorlar to`lovlari",
+            callback_data="category:local_payments",
+        ),
+        InlineKeyboardButton(
+            text="💵 Toshkent uchun to`lovlar",
+            callback_data="category:foreign_payments",
+        ),
+        InlineKeyboardButton(
+            text="📦 Toshkentdan Olingan Mahsulotlar",
+            callback_data="category:foreign_orders",
+        ),
+    )
+    keyboard.add(
+        InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel:True")
+    )
+    keyboard.adjust(1)
+    return keyboard.as_markup(resize_keyboard=True)

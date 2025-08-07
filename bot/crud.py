@@ -53,6 +53,7 @@ def employee_advances(user_id):
         .order_by("-created_at")
     )
 
+
 @sync_to_async
 def employee_salaries(user_id):
     return list(
@@ -60,6 +61,7 @@ def employee_salaries(user_id):
         .select_related("employee")
         .order_by("-created_at")
     )
+
 
 @sync_to_async
 def partner_orders(user_id):
@@ -69,10 +71,18 @@ def partner_orders(user_id):
         .order_by("-created_at")
     )
 
+
 @sync_to_async
 def partner_payments(user_id):
     return list(
         LocalPayment.objects.filter(partner__id=user_id)
         .select_related("partner")
         .order_by("-created_at")
+    )
+
+
+@sync_to_async
+def models_data(model, start_date, end_date):
+    return list(
+        model.objects.filter(created_at__gte=start_date, created_at__lte=end_date)
     )

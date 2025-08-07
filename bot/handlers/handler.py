@@ -173,7 +173,13 @@ async def cancel_handler(callback_query: types.CallbackQuery):
 
 @router.callback_query(F.data == "cancel:True")
 async def cancel_handler_true(callback_query: types.CallbackQuery):
-    await callback_query.message.edit_text(
-        text="Siz Adminsiz va Kerakli bolimlarni birini tanlang",
-        reply_markup=admin_buttons(),
-    )
+    try:
+        await callback_query.message.edit_text(
+            text="Siz Adminsiz va Kerakli bolimlarni birini tanlang",
+            reply_markup=admin_buttons(),
+        )
+    except Exception as e:
+        await callback_query.message.answer(
+            text="Siz Adminsiz va Kerakli bolimlarni birini tanlang",
+            reply_markup=admin_buttons(),
+        )
