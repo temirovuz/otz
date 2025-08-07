@@ -15,7 +15,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = '__all__'
-        read_only_fields = ['id', 'created_at', 'updated_at','converted_amount','exchange_rate']
+        read_only_fields = ['id', 'created_at', 'updated_at','converted_amount', 'uzs_amount']
 
 class ProductOrderSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.full_name', read_only=True)
@@ -23,4 +23,4 @@ class ProductOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductOrder
         fields = '__all__'
-        read_only_fields = ['id', 'created_at', 'updated_at', 'converted_amount', 'exchange_rate']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'converted_amount', 'uzs_amount']

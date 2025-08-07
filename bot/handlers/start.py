@@ -29,18 +29,26 @@ async def start_handle(message: types.Message, state: FSMContext):
             parse_mode="MARKDOWN",
         )
     elif user_type == "ishchi":
-        await message.answer(text="SIz ishchi sifatida ro'yxatdan o'tgansiz.", reply_markup=employee_buttons(str(message.from_user.id)))
+        await message.answer(
+            text="SIz ishchi sifatida ro'yxatdan o'tgansiz.",
+            reply_markup=employee_buttons(str(message.from_user.id)),
+        )
     elif user_type == "mijoz":
-        await message.answer(text="Siz mijoz sifatida ro'yxatdan o'tgansiz.", reply_markup=customer_buttons(str(message.from_user.id)))
+        await message.answer(
+            text="Siz mijoz sifatida ro'yxatdan o'tgansiz.",
+            reply_markup=customer_buttons(str(message.from_user.id)),
+        )
     else:
         await message.answer(
             text="Siz ro'yxatdan o'tgansiz, lekin sizning unvoninggiz aniqlanmagan.",
             reply_markup=ReplyKeyboardRemove(),
         )
 
+
 @router.message(F.chat.type == "private", RegisterUser.contact)
 async def register_user_contact(message: types.Message, state: FSMContext):
     await state.clear()
+    
     if (
         message.contact.phone_number.startswith("+998")
         and message.contact.user_id == message.from_user.id
@@ -52,5 +60,6 @@ async def register_user_contact(message: types.Message, state: FSMContext):
         )
     else:
         await message.answer(
-            text="Siz faqat O'zbekiston nomeri orqali ro'yxatdan o'tishin mumkin."
+            text="Siz faqat O'zbekiston nomeri orqali ro'yxatdan o'tishin mumkin.\n\nNomeringizni yuborish uchun quyidagi tugmani bosing.👇",
         )
+        await state.set_state(RegisterUser.contact)

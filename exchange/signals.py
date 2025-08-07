@@ -1,6 +1,8 @@
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 
+from advance.tasks import send_message_group
+from core.settings import GROUP_ID
 from exchange.models import Transaction, ProductOrder
 
 
@@ -31,6 +33,18 @@ def partner_balans_update(sender, instance, created, **kwargs):
     if created and instance.partner:
         user = instance.partner
         user.decrease_balance(instance.uzs_amount)
+        text = (
+            f"<b>Yangi tranzaksiya:</b>\n\n"
+            f"👤 <b>Hamkor:</b> {user.full_name}\n"
+            f"💸 <b>Tolov turi:</b> {instance.original_currency}\n"
+            f"💰 <b>Miqdori:</b> {instance.amount} {instance.original_currency}\n"
+            f"💸 <b>Konvertatsiya qilingan miqdor:</b> {instance.converted_amount}\n"
+            f"💸 <b>UZS da:</b> {instance.uzs_amount} so'm\n"
+            f"💲 <b>Valyuta kursi:</b> {instance.exchange_rate}\n"
+            f"📅 <i>{instance.created_at.strftime('%Y-%m-%d %H:%M:%S')}</i>\n"
+            f"<b>💬 Izoh:</b> {instance.comment}"
+        )
+        send_message_group(text)
 
 
 @receiver(post_delete, sender=Transaction)
@@ -45,8 +59,19 @@ def partner_balans_update_(sender, instance, created, **kwargs):
     if created and instance.partner:
         user = instance.partner
         user.balans += instance.uzs_amount
-        user.save(update_fields=['balans'])
-
+        user.save(update_fields=["balans"])
+        text = (
+            f"<b>Yangi buyurtma:</b>\n\n"
+            f"👤 <b>Hamkor:</b> {user.full_name}\n"
+            f"💸 <b>Tolov turi:</b> {instance.original_currency}\n"
+            f"💰 <b>Miqdori:</b> {instance.amount} {instance.original_currency}\n"
+            f"💸 <b>Konvertatsiya qilingan miqdor:</b> {instance.converted_amount}\n"
+            f"💸 <b>UZS da:</b> {instance.uzs_amount} so'm\n"
+            f"💲 <b>Valyuta kursi:</b> {instance.exchange_rate}\n"
+            f"📅 <i>{instance.created_at.strftime('%Y-%m-%d %H:%M:%S')}</i>\n"
+            f"<b>💬 Izoh:</b> {instance.comment}"
+        )
+        send_message_group(text)
 
 
 @receiver(pre_save, sender=ProductOrder)

@@ -13,6 +13,7 @@ TG_ADMINS = config("ADMINS", cast=Csv())
 ADMIN = config("ADMIN")
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 TELEGRAM_BOT_TOKEN = config("BOT_TOKEN")
+GROUP_ID = config("GROUP_ID", default="6357730441")
 
 # Application definition
 INSTALLED_APPS = [

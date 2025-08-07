@@ -4,6 +4,7 @@ from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
 
+from advance.tasks import send_message_simple
 from local_trading.models import LocalPartnerDelivery, LocalPayment
 
 
@@ -12,7 +13,7 @@ def post_delete_local_partner_delivery(sender, instance, **kwargs):
     if instance.partner:
         user = instance.partner
         user.balans += instance.total_amount
-        user.save(update_fields=['balans'])
+        user.save(update_fields=["balans"])
 
 
 @receiver(pre_save, sender=LocalPartnerDelivery)
@@ -23,28 +24,41 @@ def handle_remaining_debt_and_update_balance(sender, instance, **kwargs):
     user = instance.partner
 
     # Avval: total_paid asosida remaining_debt hisoblanadi
-    total_paid = (instance.cash_received or Decimal('0')) + \
-                 (instance.return_amount or Decimal('0')) + \
-                 (instance.transferred_from_account or Decimal('0'))
-    new_debt = (instance.total_amount or Decimal('0')) - total_paid
-    new_debt = new_debt.quantize(Decimal('0.01'))
+    total_paid = (
+        (instance.cash_received or Decimal("0"))
+        + (instance.return_amount or Decimal("0"))
+        + (instance.transferred_from_account or Decimal("0"))
+    )
+    new_debt = (instance.total_amount or Decimal("0")) - total_paid
+    new_debt = new_debt.quantize(Decimal("0.01"))
 
     # --- Yangi object bo'lsa: balansdan avtomatik to'lash ---
     if not instance.pk:
         if user.balans > 0 and new_debt > 0:
             used = min(user.balans, new_debt)
-            instance.cash_received = (instance.cash_received or Decimal('0')) + used
+            instance.cash_received = (instance.cash_received or Decimal("0")) + used
             total_paid += used
             new_debt -= used
             user.balans -= used
-            user.save(update_fields=['balans'])
-
+            user.save(update_fields=["balans"])
+        text = (
+            f"📦 <b>Mahaliy chiqarilgan yuk haqida:</b>\n\n"
+            f"🤝 <b>Hamkor:</b> {user.full_name}\n"
+            f"📝 <b>Mahsulot:</b> {instance.product_description}\n"
+            f"💰 <b>To'lanishi shart bo'lgan summa:</b> {instance.total_amount}\n"
+            f"💵 <b>Naqt to'langan:</b> {instance.cash_received}\n"
+            f"🏦 <b>Schyotdan o‘tkazilgan pul:</b> {instance.transferred_from_account}\n"
+            f"🔄 <b>Vozvrat:</b> {instance.return_amount}\n"
+            f"⚖️ <b>Qolgan qarz:</b> {new_debt}\n"
+            f"🗒️ <b>Izoh:</b> {instance.comment or 'Yo‘q'}"
+        )
+        send_message_simple(user.tg_id, text)
     # --- Eski object bo‘lsa: old value ni topamiz ---
-    old_debt = Decimal('0')
+    old_debt = Decimal("0")
     if instance.pk:
         try:
             old_instance = LocalPartnerDelivery.objects.get(pk=instance.pk)
-            old_debt = old_instance.remaining_debt or Decimal('0')
+            old_debt = old_instance.remaining_debt or Decimal("0")
         except LocalPartnerDelivery.DoesNotExist:
             pass
 
@@ -52,7 +66,7 @@ def handle_remaining_debt_and_update_balance(sender, instance, **kwargs):
     delta = new_debt - old_debt
     if delta != 0:
         user.balans -= delta
-        user.save(update_fields=['balans'])
+        user.save(update_fields=["balans"])
 
     # Final qarz qiymatini yozamiz
     instance.remaining_debt = new_debt
@@ -65,11 +79,21 @@ def post_save_local_payment(sender, instance, created, **kwargs):
 
     user = instance.partner
     payment_type = instance.payment_type
-    amount = instance.amount or Decimal('0')
+    amount = instance.amount or Decimal("0")
 
     remaining = amount
 
-    deliveries = LocalPartnerDelivery.objects.filter(partner=user, completed=False).order_by('created_at')
+    text = (
+        f"💳 <b>Mahaliy hamkor to'lovi haqida:</b>\n\n"
+        f"🤝 <b>Hamkor:</b> {user.full_name}\n"
+        f"💳 <b>To'lov turi:</b> {payment_type}\n"
+        f"💰 <b>To'lov miqdori:</b> {amount}\n"
+        f"🗒️ <b>Izoh:</b> {instance.comment or 'Yo‘q'}"
+    )
+    send_message_simple(user.tg_id, text)
+    deliveries = LocalPartnerDelivery.objects.filter(
+        partner=user, completed=False
+    ).order_by("created_at")
 
     with transaction.atomic():
         for delivery in deliveries:
@@ -86,7 +110,11 @@ def post_save_local_payment(sender, instance, created, **kwargs):
 
             remaining -= pay_amount
 
-            total_paid = delivery.cash_received + delivery.return_amount + delivery.transferred_from_account
+            total_paid = (
+                delivery.cash_received
+                + delivery.return_amount
+                + delivery.transferred_from_account
+            )
             delivery.remaining_debt = delivery.total_amount - total_paid
             delivery.completed = delivery.remaining_debt <= 0
             delivery.save()
@@ -94,7 +122,7 @@ def post_save_local_payment(sender, instance, created, **kwargs):
         # 🔧 Qo'shimcha: ortiqcha to'lov bo‘lsa — foydalanuvchi balansiga qo‘shiladi
         if remaining > 0:
             user.balans += remaining
-            user.save(update_fields=['balans'])
+            user.save(update_fields=["balans"])
 
 
 @receiver(pre_delete, sender=LocalPayment)
@@ -105,12 +133,14 @@ def pre_delete_local_payment(sender, instance, **kwargs):
 
     # Balansdan ayiramiz
     user.balans -= amount
-    user.save(update_fields=['balans'])
+    user.save(update_fields=["balans"])
 
     remaining = amount
 
     # Eng yangi to‘lovlar bilan bog‘langan deliverylarni qayta ko‘rib chiqamiz
-    deliveries = LocalPartnerDelivery.objects.filter(partner=user).order_by('-created_at')
+    deliveries = LocalPartnerDelivery.objects.filter(partner=user).order_by(
+        "-created_at"
+    )
 
     with transaction.atomic():
         for delivery in deliveries:
@@ -130,7 +160,11 @@ def pre_delete_local_payment(sender, instance, **kwargs):
             remaining -= refund
 
             # Qayta hisoblash
-            total_paid = delivery.cash_received + delivery.return_amount + delivery.transferred_from_account
+            total_paid = (
+                delivery.cash_received
+                + delivery.return_amount
+                + delivery.transferred_from_account
+            )
             delivery.remaining_debt = delivery.total_amount - total_paid
             delivery.completed = delivery.remaining_debt <= 0
             delivery.save()
