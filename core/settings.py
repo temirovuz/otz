@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     # THIRD PARTY APPS
     "rest_framework",
     "rest_framework_simplejwt",  # Add this for JWT
+    "rest_framework_simplejwt.token_blacklist",
     "phonenumber_field",
     "drf_yasg",
     "django_filters",
