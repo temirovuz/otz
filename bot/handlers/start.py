@@ -48,11 +48,11 @@ async def start_handle(message: types.Message, state: FSMContext):
 @router.message(F.chat.type == "private", RegisterUser.contact)
 async def register_user_contact(message: types.Message, state: FSMContext):
     await state.clear()
-    
+    print(message.contact.phone_number)
     if (
-        message.contact.phone_number.startswith("+998")
-        and message.contact.user_id == message.from_user.id
-    ):
+        message.contact.phone_number.startswith("998")
+        or message.contact.phone_number.startswith("+998")
+    ) and message.contact.user_id == message.from_user.id:
         await create_user(str(message.from_user.id), message.contact.phone_number)
         await message.answer(
             text="Siz muvofaqiyatli ro'yxatdan o'tingiz.\nTez orada javob olasiz.",

@@ -12,7 +12,7 @@ class BaseModel(models.Model):
 
 
 class User(BaseModel):
-    tg_id = models.CharField(max_length=20, unique=True, null=False, blank=False, verbose_name="Telegram ID")
+    tg_id = models.CharField(max_length=20, unique=True, null=True, blank=True, verbose_name="Telegram ID")
     phone_number = PhoneNumberField(unique=True, db_index=True, blank=False, null=False, verbose_name="Telefon nomeri")
     full_name = models.CharField(max_length=155, db_index=True, null=True, blank=True, verbose_name='Ism familiya')
     user_type = models.CharField(max_length=155, choices=(("ishchi", "Ishchi"), ("mijoz", "Mijoz"), ("user", "User"),

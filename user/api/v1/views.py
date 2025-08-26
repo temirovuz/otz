@@ -1,18 +1,18 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
 
 from core.permissions import IsEmployeeUserAndAuthenticated
-from user.api.v1.serializers import UserSerializer
+from user.api.v1.serializers import UserCreateSerializer
 from user.filters import UserFilter
 from user.models import User
 
 
-class UserListView(ListAPIView):
+class UserListView(ListCreateAPIView):
     permission_classes = [IsEmployeeUserAndAuthenticated]
     queryset = User.objects.all().order_by("full_name")
-    serializer_class = UserSerializer
+    serializer_class = UserCreateSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = UserFilter
     ordering = ["full_name"]
@@ -40,6 +40,6 @@ class UserListView(ListAPIView):
 class UserDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsEmployeeUserAndAuthenticated]
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserCreateSerializer
     lookup_field = "pk"
     http_method_names = ["patch", "delete"]
