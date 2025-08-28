@@ -3,7 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 
-from bot.crud import get_user, create_user, get_user_type
+from bot.crud import get_user, get_user_type, user_update_tg_id
 from bot.keyboard.inline import admin_buttons, customer_buttons, employee_buttons
 from bot.keyboard.reply import contact_keyboard
 from bot.states.register import RegisterUser
@@ -48,14 +48,13 @@ async def start_handle(message: types.Message, state: FSMContext):
 @router.message(F.chat.type == "private", RegisterUser.contact)
 async def register_user_contact(message: types.Message, state: FSMContext):
     await state.clear()
-    print(message.contact.phone_number)
     if (
         message.contact.phone_number.startswith("998")
         or message.contact.phone_number.startswith("+998")
     ) and message.contact.user_id == message.from_user.id:
-        await create_user(str(message.from_user.id), message.contact.phone_number)
+        await user_update_tg_id(message.contact.phone_number, message.contact.user_id)
         await message.answer(
-            text="Siz muvofaqiyatli ro'yxatdan o'tingiz.\nTez orada javob olasiz.",
+            text="Siz muvofaqiyatli ro'yxatdan o'tingiz.\n/start ni bosib botni qayta ishga tushuring.",
             reply_markup=ReplyKeyboardRemove(),
         )
     else:

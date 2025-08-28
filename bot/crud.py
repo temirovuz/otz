@@ -14,12 +14,6 @@ def get_user(tg_id: str):
 
 
 @sync_to_async()
-def create_user(tg_id: str, phone: str):
-    user = User.objects.create(tg_id=tg_id, phone_number=phone)
-    return user
-
-
-@sync_to_async()
 def get_manager(phone):
     return CustomUser.objects.filter(phone_number=phone).exists()
 
@@ -34,6 +28,16 @@ def get_user_type(tg_id: str):
     user = User.objects.filter(tg_id=tg_id).first()
     if user:
         return user.user_type
+    return False
+
+
+@sync_to_async()
+def user_update_tg_id(phone: str, tg_id: str):
+    user = User.objects.filter(phone_number=phone).first()
+    if user:
+        user.tg_id = tg_id
+        user.save()
+        return True
     return False
 
 
