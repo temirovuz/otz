@@ -34,6 +34,14 @@ class PartnerListCreateView(ListCreateAPIView):
         return super().get(request, *args, **kwargs)
 
 
+class PartnerUpdateView(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminUserAndAuthenticated]
+    serializer_class = PartnerSerializer
+    queryset = Partner.objects.all()
+    lookup_field = "pk"
+    http_method_names = ["patch", "delete"]
+
+
 class TransactionListCreateView(ListCreateAPIView):
     permission_classes = [IsAdminUserAndAuthenticated]
     serializer_class = TransactionSerializer

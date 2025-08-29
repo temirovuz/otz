@@ -8,6 +8,6 @@ urlpatterns = [
     path('local_delivery/<int:pk>/', LocalPartnerDeliveryDetailView.as_view(), name='delivery-detail'),
 
     path('local_payment/', LocalPaymentListCreateView.as_view(), name='payment-list-create'),
-    path('local_delivery/<int:pk>/', LocalPaymentDetailView.as_view(), name='payment-detail'),
+    path('local_payment/<int:pk>/', LocalPaymentDetailView.as_view(), name='payment-detail'),
 
 ]
